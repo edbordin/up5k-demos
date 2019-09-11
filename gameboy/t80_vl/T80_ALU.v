@@ -112,26 +112,6 @@ parameter [31:0] Flag_Z=6;
 parameter [31:0] Flag_S=7;
 
 
-
-// procedure AddSub(A        : std_logic_vector;
-// B        : std_logic_vector;
-// Sub      : std_logic;
-// Carry_In : std_logic;
-// signal Res      : out std_logic_vector;
-// signal Carry    : out std_logic) is
-// variable B_i          : unsigned(A'length - 1 downto 0);
-// variable Res_i        : unsigned(A'length + 1 downto 0);
-// begin
-// if Sub = '1' then
-// B_i := not unsigned(B);
-// else
-// B_i :=     unsigned(B);
-// end if;
-// Res_i := unsigned("0" & A & Carry_In) + unsigned("0" & B_i & "1");
-// Carry <= Res_i(A'length + 1);
-// Res <= std_logic_vector(Res_i(A'length downto 1));
-// end;
-// AddSub variables (temporary signals)
 wire UseCarry;
 wire Carry7_v;
 wire Overflow_v;
@@ -154,9 +134,16 @@ reg [7:0] BitMask;
   end
 
   assign UseCarry =  ~ALU_Op[2] & ALU_Op[0];
+
   // AddSub(BusA(3 downto 0), BusB(3 downto 0), ALU_Op(1), ALU_Op(1) xor (UseCarry and F_In(Flag_C)), Q_v(3 downto 0), HalfCarry_v);
+  AddSub addsub1 (BusA[3:0], BusB[3:0], ALU_Op[1], ALU_Op[1] ^ (UseCarry & F_In[Flag_C]), Q_v[3:0], HalfCarry_v);
+  
   // AddSub(BusA(6 downto 4), BusB(6 downto 4), ALU_Op(1), HalfCarry_v, Q_v(6 downto 4), Carry7_v);
+  AddSub addsub2 (BusA[6:4], BusB[6:4], ALU_Op[1], HalfCarry_v, Q_v[6:4], Carry7_v);
+
   // AddSub(BusA(7 downto 7), BusB(7 downto 7), ALU_Op(1), Carry7_v, Q_v(7 downto 7), Carry_v);
+  AddSub addsub3 (BusA[7:7], BusB[7:7], ALU_Op[1], Carry7_v, Q_v[7:7], Carry_v);
+
   // bug fix - parity flag is just parity for 8080, also overflow for Z80
   always @(Carry_v, Carry7_v, Q_v) begin
     if((Mode == 2)) begin
