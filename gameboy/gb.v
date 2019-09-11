@@ -90,15 +90,15 @@ wire cpu_rd_n;
 wire cpu_iorq_n;
 wire cpu_m1_n;
 wire cpu_mreq_n;
-	
+
 GBse cpu (
-	.RESET_n    ( !reset        ),
-	.CLK_n      ( clk           ),
-	.CLKEN      ( 1'b1          ),
-	.WAIT_n     ( 1'b1          ),
-	.INT_n      ( irq_n         ),
-	.NMI_n      ( 1'b1          ),
-	.BUSRQ_n    ( 1'b1          ),
+       .RESET_n    ( !reset        ),
+       .CLK_n      ( clk           ),
+       .CLKEN      ( 1'b1          ),
+       .WAIT_n     ( 1'b1          ),
+       .INT_n      ( irq_n         ),
+       .NMI_n      ( 1'b1          ),
+       .BUSRQ_n    ( 1'b1          ),
    .M1_n       ( cpu_m1_n      ),
    .MREQ_n     ( cpu_mreq_n    ),
    .IORQ_n     ( cpu_iorq_n    ),
@@ -111,6 +111,28 @@ GBse cpu (
    .DI         ( cpu_di        ),
    .DO         ( cpu_do        )
 );
+	
+
+// // failed attempt to integrate verilogboy core
+// cpu cpu (
+// 	.clk(clk),
+// 	.rst(reset),
+// 	.phi(), // corresponds to pin on CPU package, outputs the ~1MHz divided clock
+// 	.ct(), // internal state for control logic?
+// 	.a(cpu_addr),
+// 	.dout(cpu_do),
+// 	.din(cpu_di),
+// 	.rd(!cpu_rd_n),
+// 	.wr(!cpu_wr_n),
+// 	// need to work out how to map:
+// 	// irq_n, cpu_m1_n, cpu_mreq_n, cpu_iorq_n
+// 	.int_en(),
+// 	.int_flags_in(),
+// 	.int_flags_out(),
+// 	.key_in(),
+// 	.done(),
+// 	.fault()
+// );
 
 // --------------------------------------------------------------------
 // ------------------------------ audio -------------------------------

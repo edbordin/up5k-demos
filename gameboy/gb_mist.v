@@ -28,7 +28,7 @@ module gb_mist (
 	output spi_mosi,
 	input spi_miso,
 
-  input [7:0] joystick;
+  input [7:0] joystick,
 	// video
    output 			VGA_HS,
    output 			VGA_VS,

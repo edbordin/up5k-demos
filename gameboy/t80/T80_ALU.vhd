@@ -97,26 +97,26 @@ end T80_ALU;
 
 architecture rtl of T80_ALU is
 
-	procedure AddSub(A        : std_logic_vector;
-					 B        : std_logic_vector;
-					 Sub      : std_logic;
-					 Carry_In : std_logic;
-			  signal Res      : out std_logic_vector;
-			  signal Carry    : out std_logic) is
+	-- procedure AddSub(A        : std_logic_vector;
+					 -- B        : std_logic_vector;
+					 -- Sub      : std_logic;
+					 -- Carry_In : std_logic;
+			  -- signal Res      : out std_logic_vector;
+			  -- signal Carry    : out std_logic) is
 
-		variable B_i          : unsigned(A'length - 1 downto 0);
-		variable Res_i        : unsigned(A'length + 1 downto 0);
-	begin
-		if Sub = '1' then
-			B_i := not unsigned(B);
-		else
-			B_i :=     unsigned(B);
-		end if;
+		-- variable B_i          : unsigned(A'length - 1 downto 0);
+		-- variable Res_i        : unsigned(A'length + 1 downto 0);
+	-- begin
+		-- if Sub = '1' then
+			-- B_i := not unsigned(B);
+		-- else
+			-- B_i :=     unsigned(B);
+		-- end if;
 
-		Res_i := unsigned("0" & A & Carry_In) + unsigned("0" & B_i & "1");
-		Carry <= Res_i(A'length + 1);
-		Res <= std_logic_vector(Res_i(A'length downto 1));
-	end;
+		-- Res_i := unsigned("0" & A & Carry_In) + unsigned("0" & B_i & "1");
+		-- Carry <= Res_i(A'length + 1);
+		-- Res <= std_logic_vector(Res_i(A'length downto 1));
+	-- end;
 
 	-- AddSub variables (temporary signals)
 	signal UseCarry                : std_logic;
@@ -140,9 +140,9 @@ begin
 										  "10000000" when others;
 
 	UseCarry <= not ALU_Op(2) and ALU_Op(0);
-	AddSub(BusA(3 downto 0), BusB(3 downto 0), ALU_Op(1), ALU_Op(1) xor (UseCarry and F_In(Flag_C)), Q_v(3 downto 0), HalfCarry_v);
-	AddSub(BusA(6 downto 4), BusB(6 downto 4), ALU_Op(1), HalfCarry_v, Q_v(6 downto 4), Carry7_v);
-	AddSub(BusA(7 downto 7), BusB(7 downto 7), ALU_Op(1), Carry7_v, Q_v(7 downto 7), Carry_v);
+	-- AddSub(BusA(3 downto 0), BusB(3 downto 0), ALU_Op(1), ALU_Op(1) xor (UseCarry and F_In(Flag_C)), Q_v(3 downto 0), HalfCarry_v);
+	-- AddSub(BusA(6 downto 4), BusB(6 downto 4), ALU_Op(1), HalfCarry_v, Q_v(6 downto 4), Carry7_v);
+	-- AddSub(BusA(7 downto 7), BusB(7 downto 7), ALU_Op(1), Carry7_v, Q_v(7 downto 7), Carry_v);
 
 	-- bug fix - parity flag is just parity for 8080, also overflow for Z80
 	process (Carry_v, Carry7_v, Q_v)

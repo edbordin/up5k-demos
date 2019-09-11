@@ -82,19 +82,22 @@ begin
   end
 end
 
-module icosoc_flashmem (
-	.clk(clk)
-  .resetn(resetn),
-  .valid(flashmem_valid),
-  .ready(flashmem_ready),
-  .addr(flashmem_addr),
-  .rdata(load_data),
-
-
-	.spi_cs(spi_csn),
-	.spi_sclk(spi_sck),
-	.spi_mosi(spi_mosi),
-	.spi_miso(spi_miso)
-);
-
 endmodule
+
+// module icosoc_flashmem (
+// 	.clk(clk)
+//   .resetn(resetn),
+//   .valid(flashmem_valid),
+//   .ready(flashmem_ready),
+//   .addr(flashmem_addr),
+//   .rdata(load_data),
+
+
+// 	.spi_cs(spi_csn),
+// 	.spi_sclk(spi_sck),
+// 	.spi_mosi(spi_mosi),
+// 	.spi_miso(spi_miso)
+// );
+
+// endmodule
+

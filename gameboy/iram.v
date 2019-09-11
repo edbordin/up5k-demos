@@ -38,3 +38,5 @@ module iram (
 	end
 	assign q = q_pre;
 `endif
+
+endmodule

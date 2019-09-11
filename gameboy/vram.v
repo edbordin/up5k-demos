@@ -37,3 +37,5 @@ module vram (
 	end
 	assign q = q_pre;
 `endif
+
+endmodule
