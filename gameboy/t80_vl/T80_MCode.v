@@ -172,35 +172,31 @@ parameter [31:0] Flag_S=7;
 
 
 
-// function is_cc_true(
-// F : std_logic_vector(7 downto 0);
-// cc : bit_vector(2 downto 0)
-// ) return boolean is
-// begin
-// if Mode = 3 then
-// case cc is
-// when "000" => return F(7) = '0'; -- NZ
-// when "001" => return F(7) = '1'; -- Z
-// when "010" => return F(4) = '0'; -- NC
-// when "011" => return F(4) = '1'; -- C
-// when "100" => return false;
-// when "101" => return false;
-// when "110" => return false;
-// when "111" => return false;
-// end case;
-// else
-// case cc is
-// when "000" => return F(6) = '0'; -- NZ
-// when "001" => return F(6) = '1'; -- Z
-// when "010" => return F(0) = '0'; -- NC
-// when "011" => return F(0) = '1'; -- C
-// when "100" => return F(2) = '0'; -- PO
-// when "101" => return F(2) = '1'; -- PE
-// when "110" => return F(7) = '0'; -- P
-// when "111" => return F(7) = '1'; -- M
-// end case;
-// end if;
-// end;
+function automatic is_cc_true(
+  input [7:0] F,
+  input [2:0] cc
+);
+  if (Mode == 3) begin
+    case(cc)
+      "000": is_cc_true = (F[7] == 1'b0); // NZ
+      "001": is_cc_true = (F[7] == 1'b1); // Z
+      "010": is_cc_true = (F[4] == 1'b0); // NC
+      "011": is_cc_true = (F[4] == 1'b1); // C
+      default: is_cc_true = 1'b0;
+    endcase
+  end else begin
+    case(cc)
+      "000": is_cc_true = (F[6] == 1'b0); // NZ
+      "001": is_cc_true = (F[6] == 1'b1); // Z
+      "010": is_cc_true = (F[0] == 1'b0); // NC
+      "011": is_cc_true = (F[0] == 1'b1); // C
+      "100": is_cc_true = (F[2] == 1'b0); // PO
+      "101": is_cc_true = (F[2] == 1'b1); // PE
+      "110": is_cc_true = (F[7] == 1'b0); // P
+      "111": is_cc_true = (F[7] == 1'b1); // M
+    endcase
+  end
+endfunction
 
   always @(IR, ISet, MCycle, F, NMICycle, IntCycle) begin : P1
     reg [2:0] DDD;
@@ -208,17 +204,11 @@ parameter [31:0] Flag_S=7;
     reg [1:0] DPair;
     reg [7:0] IRB;
   //bit_vector(7 downto 0);
-    reg is_cc_true_1;
-    reg is_cc_true_2;
-    reg is_cc_true_3;
 
     DDD = IR[5:3];
     SSS = IR[2:0];
     DPair = IR[5:4];
     IRB = to_bitvector[IR];
-    is_cc_true_1 = 1'b1;
-    is_cc_true_2 = 1'b1;
-    is_cc_true_3 = 1'b1;
     MCycles <= 3'b001;
     if(MCycle == 3'b001) begin
       TStates <= 3'b100;
@@ -1304,7 +1294,7 @@ parameter [31:0] Flag_S=7;
           3'b011 : begin
             // 3 =>
             Inc_PC <= 1'b1;
-            if(is_cc_true_1 == 1'b1) begin
+            if(is_cc_true(F, IR[5:3])) begin
               //is_cc_true(F, to_bitvector(IR(5 downto 3))) then
               Jump <= 1'b1;
             end
@@ -1521,7 +1511,7 @@ parameter [31:0] Flag_S=7;
             // 3 =>
             Inc_PC <= 1'b1;
             LDW <= 1'b1;
-            if(is_cc_true_2 == 1'b1) begin
+            if(is_cc_true(F, IR[5:3])) begin
               //is_cc_true(F, to_bitvector(IR(5 downto 3))) then
               IncDec_16 <= 4'b1111;
               Set_Addr_TO <= aSP;
@@ -1684,7 +1674,7 @@ parameter [31:0] Flag_S=7;
                     // to_integer(unsigned(MCycle)) is
           3'b001 : begin
             // 1 =>
-            if(is_cc_true_3 == 1'b1) begin
+            if(is_cc_true(F, IR[5:3])) begin
               //is_cc_true(F, to_bitvector(IR(5 downto 3))) then
               Set_Addr_TO <= aSP;
             end
