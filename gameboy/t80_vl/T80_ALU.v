@@ -136,13 +136,13 @@ reg [7:0] BitMask;
   assign UseCarry =  ~ALU_Op[2] & ALU_Op[0];
 
   // AddSub(BusA(3 downto 0), BusB(3 downto 0), ALU_Op(1), ALU_Op(1) xor (UseCarry and F_In(Flag_C)), Q_v(3 downto 0), HalfCarry_v);
-  AddSub addsub1 (BusA[3:0], BusB[3:0], ALU_Op[1], ALU_Op[1] ^ (UseCarry & F_In[Flag_C]), Q_v[3:0], HalfCarry_v);
+  AddSub #(.WIDTH(4)) addsub1 (BusA[3:0], BusB[3:0], ALU_Op[1], ALU_Op[1] ^ (UseCarry & F_In[Flag_C]), Q_v[3:0], HalfCarry_v);
   
   // AddSub(BusA(6 downto 4), BusB(6 downto 4), ALU_Op(1), HalfCarry_v, Q_v(6 downto 4), Carry7_v);
-  AddSub addsub2 (BusA[6:4], BusB[6:4], ALU_Op[1], HalfCarry_v, Q_v[6:4], Carry7_v);
+  AddSub #(.WIDTH(3)) addsub2 (BusA[6:4], BusB[6:4], ALU_Op[1], HalfCarry_v, Q_v[6:4], Carry7_v);
 
   // AddSub(BusA(7 downto 7), BusB(7 downto 7), ALU_Op(1), Carry7_v, Q_v(7 downto 7), Carry_v);
-  AddSub addsub3 (BusA[7:7], BusB[7:7], ALU_Op[1], Carry7_v, Q_v[7:7], Carry_v);
+  AddSub #(.WIDTH(1)) addsub3 (BusA[7:7], BusB[7:7], ALU_Op[1], Carry7_v, Q_v[7:7], Carry_v);
 
   // bug fix - parity flag is just parity for 8080, also overflow for Z80
   always @(Carry_v, Carry7_v, Q_v) begin
