@@ -353,7 +353,7 @@ wire XYbit_undoc;
       IStatus <= 2'b00;
       MCycles <= 3'b000;
       DO <= 8'b00000000;
-      ACC <= {8{1'b1}};
+      ACC <= {8{1'b0}};
       F <= {8{1'b1}};
       Ap <= {8{1'b1}};
       Fp <= {8{1'b1}};

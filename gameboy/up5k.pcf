@@ -2,20 +2,22 @@ set_io clock_12 35
 set_io LED0 37
 set_io LED1 11
 
-set_io VGA_HS 42
-set_io VGA_VS 36
-set_io VGA_B[3] 44
-set_io VGA_B[2] 46
-set_io VGA_B[1] 48
-set_io VGA_B[0] 3
-set_io VGA_G[3] 31
-set_io VGA_G[2] 34
-set_io VGA_G[1] 38
-set_io VGA_G[0] 43
-set_io VGA_R[3] 45
-set_io VGA_R[2] 47
+set_io VGA_CK 38
+set_io VGA_DE 32
+set_io VGA_HS 31
+set_io VGA_VS 28
+set_io VGA_B[3] 43
+set_io VGA_B[2] 42
+set_io VGA_B[1] 36
+set_io VGA_B[0] 34
+set_io VGA_G[3] 47
+set_io VGA_G[2] 46
+set_io VGA_G[1] 45
+set_io VGA_G[0] 44
+set_io VGA_R[3] 4
+set_io VGA_R[2] 3
 set_io VGA_R[1] 2
-set_io VGA_R[0] 4
+set_io VGA_R[0] 48
 
 set_io -nowarn AUDIO_O 19
 set_io joy_strobe 25

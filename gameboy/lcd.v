@@ -19,6 +19,7 @@ module lcd (
    output reg	hs,
    output reg 	vs,
    output [1:0] dout,
+   output active
 );
 
 // Mode 00:  h-blank
@@ -104,6 +105,8 @@ always@(posedge pclk) begin
 			v_cnt <= 616-4;
 	end
 end
+
+assign active = h_cnt < H && v_cnt < V;
 
 // -------------------------------------------------------------------------------
 // ------------------------------- pixel generator -------------------------------

@@ -13,7 +13,7 @@ initial begin
        $readmemh("boot_rom.dat", rom);
 end
 
-always@(posedge clk)
+always@(posedge clock)
    q <= rom[address];
 	 
 endmodule

@@ -4,8 +4,8 @@ TOP = gb_mist
 PIN_DEF = up5k.pcf
 DEVICE = up5k
 ADD_SRC = $(wildcard *.v) $(wildcard t80_vl/*.v)
-FREQ = 8
-#USE_ARACHNEPNR = Y
+FREQ = 12
+# USE_ARACHNEPNR = Y
 
 include main.mk
 

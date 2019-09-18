@@ -27,7 +27,7 @@ SB_SPRAM256KA spram_0
     .ADDRESS(mem_addr),
     .DATAIN(mem_din[15:0]),
     .MASKWREN(4'b1111),
-    .WREN(wren),
+    .WREN(mem_wren),
     .CHIPSELECT(1'b1),
     .CLOCK(clk),
     .STANDBY(1'b0),
@@ -41,7 +41,7 @@ SB_SPRAM256KA spram_1
     .ADDRESS(mem_addr),
     .DATAIN(mem_din[31:16]),
     .MASKWREN(4'b1111),
-    .WREN(wren),
+    .WREN(mem_wren),
     .CHIPSELECT(1'b1),
     .CLOCK(clk),
     .STANDBY(1'b0),
@@ -82,22 +82,20 @@ begin
   end
 end
 
+icosoc_flashmem flash (
+	.clk(clk),
+  .resetn(resetn),
+  .valid(flashmem_valid),
+  .ready(flashmem_ready),
+  .addr(flashmem_addr),
+  .rdata(load_data),
+
+
+	.spi_cs(spi_csn),
+	.spi_sclk(spi_sck),
+	.spi_mosi(spi_mosi),
+	.spi_miso(spi_miso)
+);
+
 endmodule
-
-// module icosoc_flashmem (
-// 	.clk(clk)
-//   .resetn(resetn),
-//   .valid(flashmem_valid),
-//   .ready(flashmem_ready),
-//   .addr(flashmem_addr),
-//   .rdata(load_data),
-
-
-// 	.spi_cs(spi_csn),
-// 	.spi_sclk(spi_sck),
-// 	.spi_mosi(spi_mosi),
-// 	.spi_miso(spi_miso)
-// );
-
-// endmodule
 
