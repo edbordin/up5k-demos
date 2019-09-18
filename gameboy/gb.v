@@ -111,28 +111,6 @@ GBse cpu (
    .DI         ( cpu_di        ),
    .DO         ( cpu_do        )
 );
-	
-
-// // failed attempt to integrate verilogboy core
-// cpu cpu (
-// 	.clk(clk),
-// 	.rst(reset),
-// 	.phi(), // corresponds to pin on CPU package, outputs the ~1MHz divided clock
-// 	.ct(), // internal state for control logic?
-// 	.a(cpu_addr),
-// 	.dout(cpu_do),
-// 	.din(cpu_di),
-// 	.rd(!cpu_rd_n),
-// 	.wr(!cpu_wr_n),
-// 	// need to work out how to map:
-// 	// irq_n, cpu_m1_n, cpu_mreq_n, cpu_iorq_n
-// 	.int_en(),
-// 	.int_flags_in(),
-// 	.int_flags_out(),
-// 	.key_in(),
-// 	.done(),
-// 	.fault()
-// );
 
 // --------------------------------------------------------------------
 // ------------------------------ audio -------------------------------

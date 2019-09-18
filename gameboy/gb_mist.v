@@ -132,23 +132,23 @@ gb gb (
 wire [1:0] video_d;
 wire video_hs, video_vs, video_de;
 
-// lcd lcd_i (
-// 	 .pclk   ( clk8       ),
-// 	 .clk    ( clk4       ),
+lcd lcd_i (
+	 .pclk   ( clk8       ),
+	 .clk    ( clk4       ),
 
-// 	 .tint   ( status[1]  ),
+	 .tint   ( status[1]  ),
 
-// 	 // serial interface
-// 	 .clkena ( lcd_clkena ),
-// 	 .data   ( lcd_data   ),
-// 	 .mode   ( lcd_mode   ),  // used to detect begin of new lines and frames
-// 	 .on     ( lcd_on     ),
+	 // serial interface
+	 .clkena ( lcd_clkena ),
+	 .data   ( lcd_data   ),
+	 .mode   ( lcd_mode   ),  // used to detect begin of new lines and frames
+	 .on     ( lcd_on     ),
 	 
-//   	 .hs    ( video_hs    ),
-// 	 .vs    ( video_vs    ),
-// 	 .dout   ( video_d     ),
-// 	 .active (video_de)
-// );
+  	 .hs    ( video_hs    ),
+	 .vs    ( video_vs    ),
+	 .dout   ( video_d     ),
+	 .active (video_de)
+);
 
 assign VGA_CK = clk8;
 assign VGA_HS = video_hs;

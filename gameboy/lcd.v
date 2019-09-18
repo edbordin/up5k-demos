@@ -66,43 +66,55 @@ parameter VBP = 36;     // unused time after vsync
 reg[7:0] h_cnt;         // horizontal pixel counter
 reg[9:0] v_cnt;         // vertical pixel counter
 
+reg last_pclk;
+
+always@(posedge clk) begin
+	last_pclk <= pclk;
+end
+
+wire pclk_strobe = !last_pclk && pclk;
+
 // horizontal pixel counter
 reg [1:0] last_mode_h;
-always@(posedge pclk) begin
-	last_mode_h <= mode;
-	
-	if(h_cnt==H+HFP+HS+HBP-1)   h_cnt <= 0;
-	else                        h_cnt <= h_cnt + 1;
+always@(posedge clk) begin
+	if (pclk_strobe == 1'b1) begin
+		last_mode_h <= mode;
+		
+		if(h_cnt==H+HFP+HS+HBP-1)   h_cnt <= 0;
+		else                        h_cnt <= h_cnt + 1;
 
-	// generate negative hsync signal
-	if(h_cnt == H+HFP)    hs <= 1'b0;
-	if(h_cnt == H+HFP+HS) hs <= 1'b1;
+		// generate negative hsync signal
+		if(h_cnt == H+HFP)    hs <= 1'b0;
+		if(h_cnt == H+HFP+HS) hs <= 1'b1;
 
-	// synchronize to input mode
-	// end of hblank
-	if((mode == 2'b10) && (last_mode_h == 2'b00))
-		h_cnt <= 0;
+		// synchronize to input mode
+		// end of hblank
+		if((mode == 2'b10) && (last_mode_h == 2'b00))
+			h_cnt <= 0;
+	end
 end
 
 // veritical pixel counter
 reg [1:0] last_mode_v;
-always@(posedge pclk) begin
-	// the vertical counter is processed at the begin of each hsync
-	if(h_cnt == H+HFP+HS+HBP-1) begin
-		if(v_cnt==VS+VFP+V+VBP-1)  v_cnt <= 0; 
-		else							   v_cnt <= v_cnt + 1;
+always@(posedge clk) begin
+	if (pclk_strobe == 1'b1) begin
+		// the vertical counter is processed at the begin of each hsync
+		if(h_cnt == H+HFP+HS+HBP-1) begin
+			if(v_cnt==VS+VFP+V+VBP-1)  v_cnt <= 0; 
+			else							   v_cnt <= v_cnt + 1;
 
-	   // generate positive vsync signal
-		if(v_cnt == V+VFP)    vs <= 1'b1;
-		if(v_cnt == V+VFP+VS) vs <= 1'b0;
+		// generate positive vsync signal
+			if(v_cnt == V+VFP)    vs <= 1'b1;
+			if(v_cnt == V+VFP+VS) vs <= 1'b0;
 
-		last_mode_v <= mode;
+			last_mode_v <= mode;
 
-		// synchronize to input mode
-		// end of mode 01 (vblank)
-		// make and offset of - 4 for the 4 line delay of the scandoubler
-		if((mode != 2'b01) && (last_mode_v == 2'b01))
-			v_cnt <= 616-4;
+			// synchronize to input mode
+			// end of mode 01 (vblank)
+			// make and offset of - 4 for the 4 line delay of the scandoubler
+			if((mode != 2'b01) && (last_mode_v == 2'b01))
+				v_cnt <= 616-4;
+		end
 	end
 end
 
@@ -115,15 +127,17 @@ reg blank;
 reg [1:0] pixel_reg;
 reg [7:0] shift_reg_rptr;
 
-always@(posedge pclk) begin
-	// visible area?
-	if((v_cnt < V) && (h_cnt < H)) begin
-		blank <= 1'b0;
-		pixel_reg <= shift_reg[{!p_toggle, shift_reg_rptr}];
-		shift_reg_rptr <= shift_reg_rptr + 8'd1;
-	end else begin
-		blank <= 1'b1;
-		shift_reg_rptr <= 8'd0;
+always@(posedge clk) begin
+	if (pclk_strobe == 1'b1) begin
+		// visible area?
+		if((v_cnt < V) && (h_cnt < H)) begin
+			blank <= 1'b0;
+			pixel_reg <= shift_reg[{!p_toggle, shift_reg_rptr}];
+			shift_reg_rptr <= shift_reg_rptr + 8'd1;
+		end else begin
+			blank <= 1'b1;
+			shift_reg_rptr <= 8'd0;
+		end
 	end
 end
 
