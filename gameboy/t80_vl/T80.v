@@ -140,7 +140,13 @@ parameter [31:0] Flag_Y=5;
 parameter [31:0] Flag_Z=6;
 parameter [31:0] Flag_S=7;
 
-
+localparam [2:0] aNone = 3'b111;
+localparam [2:0] aBC = 3'b000;
+localparam [2:0] aDE = 3'b001;
+localparam [2:0] aXY = 3'b010;
+localparam [2:0] aIOA = 3'b100;
+localparam [2:0] aSP = 3'b101;
+localparam [2:0] aZI = 3'b110;
 
 // Registers
 reg [7:0] ACC; reg [7:0] F;
@@ -384,7 +390,7 @@ wire XYbit_undoc;
         end
         Arith16_r <= Arith16;
         PreserveC_r <= PreserveC;
-        if(ISet == 2'b10 && ALU_OP[2] == 1'b0 && ALU_OP[0] == 1'b1 && MCycle == 3'b011) begin
+        if(ISet == 2'b10 && ALU_Op[2] == 1'b0 && ALU_Op[0] == 1'b1 && MCycle == 3'b011) begin
           Z16_r <= 1'b1;
         end
         else begin
@@ -392,7 +398,7 @@ wire XYbit_undoc;
         end
         if(MCycle == 3'b001 && TState[2] == 1'b0) begin
           // MCycle = 1 and TState = 1, 2, or 3
-          if(TState == 2 && Wait_n == 1'b1) begin
+          if(TState == 2 && WAIT_n == 1'b1) begin
             if(Mode < 2) begin
               A[7:0] <= R;
               A[15:8] <= I;
@@ -554,7 +560,7 @@ wire XYbit_undoc;
               F[Flag_N] <= 1'b0;
             end
           end
-          if(TState == 2 && Wait_n == 1'b1) begin
+          if(TState == 2 && WAIT_n == 1'b1) begin
             if(ISet == 2'b01 && MCycle == 3'b111) begin
               IR <= DInst;
             end
@@ -575,7 +581,7 @@ wire XYbit_undoc;
           if(TState == 3 && MCycle == 3'b110) begin
             TmpAddr <= (RegBusC) + (DI_Reg);
           end
-          if((TState == 2 && Wait_n == 1'b1) || (TState == 4 && MCycle == 3'b001)) begin
+          if((TState == 2 && WAIT_n == 1'b1) || (TState == 4 && MCycle == 3'b001)) begin
             if(IncDec_16[2:0] == 3'b111) begin
               if(IncDec_16[3] == 1'b1) begin
                 SP <= SP - 1;
@@ -680,7 +686,7 @@ wire XYbit_undoc;
         if(I_BC == 1'b1 || I_BT == 1'b1) begin
           F[Flag_P] <= IncDecZ;
         end
-        if((TState == 1 && Save_ALU_r == 1'b0) || (Save_ALU_r == 1'b1 && ALU_OP_r != 4'b0111)) begin
+        if((TState == 1 && Save_ALU_r == 1'b0) || (Save_ALU_r == 1'b1 && ALU_Op_r != 4'b0111)) begin
           case(Read_To_Reg_r)
           5'b10111 : begin
             ACC <= Save_Mux;
@@ -752,10 +758,10 @@ wire XYbit_undoc;
   assign RegAddrA = (TState == 2 || (TState == 3 && MCycle == 3'b001 && IncDec_16[2] == 1'b1)) && XY_State == 2'b00 ? {Alternate,IncDec_16[1:0]} : (TState == 2 || (TState == 3 && MCycle == 3'b001 && IncDec_16[2] == 1'b1)) && IncDec_16[1:0] == 2'b10 ? {XY_State[1],2'b11} : ExchangeDH == 1'b1 && TState == 3 ? {Alternate,2'b10} : ExchangeDH == 1'b1 && TState == 4 ? {Alternate,2'b01} : RegAddrA_r;
   assign RegAddrB = ExchangeDH == 1'b1 && TState == 3 ? {Alternate,2'b01} : RegAddrB_r;
   assign ID16 = IncDec_16[3] == 1'b1 ? (RegBusA) - 1 : (RegBusA) + 1;
-  always @(Save_ALU_r, Auto_Wait_t1, ALU_OP_r, Read_To_Reg_r, ExchangeDH, IncDec_16, MCycle, TState, Wait_n) begin
+  always @(Save_ALU_r, Auto_Wait_t1, ALU_Op_r, Read_To_Reg_r, ExchangeDH, IncDec_16, MCycle, TState, WAIT_n) begin
     RegWEH <= 1'b0;
     RegWEL <= 1'b0;
-    if((TState == 1 && Save_ALU_r == 1'b0) || (Save_ALU_r == 1'b1 && ALU_OP_r != 4'b0111)) begin
+    if((TState == 1 && Save_ALU_r == 1'b0) || (Save_ALU_r == 1'b1 && ALU_Op_r != 4'b0111)) begin
       case(Read_To_Reg_r)
       5'b10000,5'b10001,5'b10010,5'b10011,5'b10100,5'b10101 : begin
         RegWEH <=  ~Read_To_Reg_r[0];
@@ -769,7 +775,7 @@ wire XYbit_undoc;
       RegWEH <= 1'b1;
       RegWEL <= 1'b1;
     end
-    if(IncDec_16[2] == 1'b1 && ((TState == 2 && Wait_n == 1'b1 && MCycle != 3'b001) || (TState == 3 && MCycle == 3'b001))) begin
+    if(IncDec_16[2] == 1'b1 && ((TState == 2 && WAIT_n == 1'b1 && MCycle != 3'b001) || (TState == 3 && MCycle == 3'b001))) begin
       case(IncDec_16[1:0])
       2'b00,2'b01,2'b10 : begin
         RegWEH <= 1'b1;
@@ -781,7 +787,7 @@ wire XYbit_undoc;
     end
   end
 
-  always @(Save_Mux, RegBusB, RegBusA_r, ID16, ExchangeDH, IncDec_16, MCycle, TState, Wait_n) begin
+  always @(Save_Mux, RegBusB, RegBusA_r, ID16, ExchangeDH, IncDec_16, MCycle, TState, WAIT_n) begin
     RegDIH <= Save_Mux;
     RegDIL <= Save_Mux;
     if(ExchangeDH == 1'b1 && TState == 3) begin
@@ -907,7 +913,7 @@ wire XYbit_undoc;
       RFSH_n <= 1'b1;
     end else begin
       if(CEN == 1'b1) begin
-        if(MCycle == 3'b001 && ((TState == 2 && Wait_n == 1'b1) || TState == 3)) begin
+        if(MCycle == 3'b001 && ((TState == 2 && WAIT_n == 1'b1) || TState == 3)) begin
           RFSH_n <= 1'b0;
         end
         else begin
@@ -997,14 +1003,14 @@ wire XYbit_undoc;
         if(IntCycle == 1'b1 || NMICycle == 1'b1) begin
           Halt_FF <= 1'b0;
         end
-        if(MCycle == 3'b001 && TState == 2 && Wait_n == 1'b1) begin
+        if(MCycle == 3'b001 && TState == 2 && WAIT_n == 1'b1) begin
           M1_n <= 1'b1;
         end
         if(BusReq_s == 1'b1 && BusAck == 1'b1) begin
         end
         else begin
           BusAck <= 1'b0;
-          if(TState == 2 && Wait_n == 1'b0) begin
+          if(TState == 2 && WAIT_n == 1'b0) begin
           end
           else if(T_Res == 1'b1) begin
             if(Halt == 1'b1) begin

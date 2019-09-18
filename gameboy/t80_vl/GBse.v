@@ -145,7 +145,7 @@ wire [2:0] TState;
     .Write(Write),
     .RFSH_n(RFSH_n),
     .HALT_n(HALT_n),
-    .WAIT_n(Wait_n),
+    .WAIT_n(WAIT_n),
     .INT_n(INT_n),
     .NMI_n(NMI_n),
     .RESET_n(RESET_n),
@@ -174,7 +174,7 @@ wire [2:0] TState;
         IORQ_n <= 1'b1;
         MREQ_n <= 1'b1;
         if(MCycle == 3'b001) begin
-          if(TState == 3'b001 || (TState == 3'b010 && Wait_n == 1'b0)) begin
+          if(TState == 3'b001 || (TState == 3'b010 && WAIT_n == 1'b0)) begin
             RD_n <=  ~IntCycle_n;
             MREQ_n <=  ~IntCycle_n;
             IORQ_n <= IntCycle_n;
@@ -184,7 +184,7 @@ wire [2:0] TState;
           end
         end
         else begin
-          if((TState == 3'b001 || (TState == 3'b010 && Wait_n == 1'b0)) && NoRead == 1'b0 && Write == 1'b0) begin
+          if((TState == 3'b001 || (TState == 3'b010 && WAIT_n == 1'b0)) && NoRead == 1'b0 && Write == 1'b0) begin
             RD_n <= 1'b0;
             IORQ_n <=  ~IORQ;
             MREQ_n <= IORQ;
@@ -197,14 +197,14 @@ wire [2:0] TState;
             end
           end
           else begin
-            if((TState == 3'b001 || (TState == 3'b010 && Wait_n == 1'b0)) && Write == 1'b1) begin
+            if((TState == 3'b001 || (TState == 3'b010 && WAIT_n == 1'b0)) && Write == 1'b1) begin
               WR_n <= 1'b0;
               IORQ_n <=  ~IORQ;
               MREQ_n <= IORQ;
             end
           end
         end
-        if(TState == 3'b010 && Wait_n == 1'b1) begin
+        if(TState == 3'b010 && WAIT_n == 1'b1) begin
           DI_Reg <= DI;
         end
       end

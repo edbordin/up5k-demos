@@ -169,7 +169,13 @@ parameter [31:0] Flag_S=7;
 // ADD, ADC, SUB, SBC, AND, XOR, OR, CP, ROT, BIT, SET, RES, DAA, RLD, RRD, None
 // aNone,aXY,aIOA,aSP,aBC,aDE,aZI
 // A,I;A,R;I,A;R,A;None
-
+localparam [2:0] aNone = 3'b111;
+localparam [2:0] aBC = 3'b000;
+localparam [2:0] aDE = 3'b001;
+localparam [2:0] aXY = 3'b010;
+localparam [2:0] aIOA = 3'b100;
+localparam [2:0] aSP = 3'b101;
+localparam [2:0] aZI = 3'b110;
 
 
 function automatic is_cc_true(
@@ -208,7 +214,7 @@ endfunction
     DDD = IR[5:3];
     SSS = IR[2:0];
     DPair = IR[5:4];
-    IRB = to_bitvector[IR];
+    IRB = IR;
     MCycles <= 3'b001;
     if(MCycle == 3'b001) begin
       TStates <= 3'b100;
@@ -517,11 +523,11 @@ endfunction
           // 2 =>
           Inc_PC <= 1'b1;
           Read_To_Reg <= 1'b1;
-          if(DPAIR == 2'b11) begin
+          if(DPair == 2'b11) begin
             Set_BusA_To[3:0] <= 4'b1000;
           end
           else begin
-            Set_BusA_To[2:1] <= DPAIR;
+            Set_BusA_To[2:1] <= DPair;
             Set_BusA_To[0] <= 1'b1;
           end
         end
@@ -529,11 +535,11 @@ endfunction
           // 3 =>
           Inc_PC <= 1'b1;
           Read_To_Reg <= 1'b1;
-          if(DPAIR == 2'b11) begin
+          if(DPair == 2'b11) begin
             Set_BusA_To[3:0] <= 4'b1001;
           end
           else begin
-            Set_BusA_To[2:1] <= DPAIR;
+            Set_BusA_To[2:1] <= DPair;
             Set_BusA_To[0] <= 1'b0;
           end
         end
@@ -664,12 +670,12 @@ endfunction
           // 1 =>
           TStates <= 3'b101;
           IncDec_16 <= 4'b1111;
-          Set_Addr_TO <= aSP;
-          if(DPAIR == 2'b11) begin
+          Set_Addr_To <= aSP;
+          if(DPair == 2'b11) begin
             Set_BusB_To <= 4'b0111;
           end
           else begin
-            Set_BusB_To[2:1] <= DPAIR;
+            Set_BusB_To[2:1] <= DPair;
             Set_BusB_To[0] <= 1'b0;
             Set_BusB_To[3] <= 1'b0;
           end
@@ -678,11 +684,11 @@ endfunction
           // 2 =>
           IncDec_16 <= 4'b1111;
           Set_Addr_To <= aSP;
-          if(DPAIR == 2'b11) begin
+          if(DPair == 2'b11) begin
             Set_BusB_To <= 4'b1011;
           end
           else begin
-            Set_BusB_To[2:1] <= DPAIR;
+            Set_BusB_To[2:1] <= DPair;
             Set_BusB_To[0] <= 1'b1;
             Set_BusB_To[3] <= 1'b0;
           end
@@ -710,11 +716,11 @@ endfunction
           IncDec_16 <= 4'b0111;
           Set_Addr_To <= aSP;
           Read_To_Reg <= 1'b1;
-          if(DPAIR == 2'b11) begin
+          if(DPair == 2'b11) begin
             Set_BusA_To[3:0] <= 4'b1011;
           end
           else begin
-            Set_BusA_To[2:1] <= DPAIR;
+            Set_BusA_To[2:1] <= DPair;
             Set_BusA_To[0] <= 1'b1;
           end
         end
@@ -722,11 +728,11 @@ endfunction
           // 3 =>
           IncDec_16 <= 4'b0111;
           Read_To_Reg <= 1'b1;
-          if(DPAIR == 2'b11) begin
+          if(DPair == 2'b11) begin
             Set_BusA_To[3:0] <= 4'b0111;
           end
           else begin
-            Set_BusA_To[2:1] <= DPAIR;
+            Set_BusA_To[2:1] <= DPair;
             Set_BusA_To[0] <= 1'b0;
           end
         end
@@ -787,7 +793,7 @@ endfunction
                     // to_integer(unsigned(MCycle)) is
           3'b001 : begin
             // 1 =>
-            Set_Addr_TO <= aSP;
+            Set_Addr_To <= aSP;
           end
           3'b010 : begin
             // 2 =>
@@ -1039,7 +1045,7 @@ endfunction
         end
         else if(IntCycle == 1'b1) begin
           // INT (IM 2)
-          if(mode == 3) begin
+          if(Mode == 3) begin
             MCycles <= 3'b011;
           end
           else begin
@@ -1514,7 +1520,7 @@ endfunction
             if(is_cc_true(F, IR[5:3])) begin
               //is_cc_true(F, to_bitvector(IR(5 downto 3))) then
               IncDec_16 <= 4'b1111;
-              Set_Addr_TO <= aSP;
+              Set_Addr_To <= aSP;
               TStates <= 3'b100;
               Set_BusB_To <= 4'b1101;
             end
@@ -1546,7 +1552,7 @@ endfunction
                 // to_integer(unsigned(MCycle)) is
         3'b001 : begin
           // 1 =>
-          Set_Addr_TO <= aSP;
+          Set_Addr_To <= aSP;
         end
         3'b010 : begin
           // 2 =>
@@ -1676,7 +1682,7 @@ endfunction
             // 1 =>
             if(is_cc_true(F, IR[5:3])) begin
               //is_cc_true(F, to_bitvector(IR(5 downto 3))) then
-              Set_Addr_TO <= aSP;
+              Set_Addr_To <= aSP;
             end
             else begin
               MCycles <= 3'b001;
@@ -2265,7 +2271,7 @@ endfunction
       end
       8'b01000100,8'b01001100,8'b01010100,8'b01011100,8'b01100100,8'b01101100,8'b01110100,8'b01111100 : begin
         // NEG
-        Alu_OP <= 4'b0010;
+        ALU_Op <= 4'b0010;
         Set_BusB_To <= 4'b0111;
         Set_BusA_To <= 4'b1010;
         Read_To_Acc <= 1'b1;
@@ -2443,7 +2449,7 @@ endfunction
                 // to_integer(unsigned(MCycle)) is
         3'b001 : begin
           // 1 =>
-          Set_Addr_TO <= aSP;
+          Set_Addr_To <= aSP;
         end
         3'b010 : begin
           // 2 =>

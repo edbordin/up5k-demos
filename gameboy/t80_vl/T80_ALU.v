@@ -147,14 +147,14 @@ reg [7:0] BitMask;
   // bug fix - parity flag is just parity for 8080, also overflow for Z80
   always @(Carry_v, Carry7_v, Q_v) begin
     if((Mode == 2)) begin
-      OverFlow_v <=  ~(Q_v[0] ^ Q_v[1] ^ Q_v[2] ^ Q_v[3] ^ Q_v[4] ^ Q_v[5] ^ Q_v[6] ^ Q_v[7]);
+      Overflow_v <=  ~(Q_v[0] ^ Q_v[1] ^ Q_v[2] ^ Q_v[3] ^ Q_v[4] ^ Q_v[5] ^ Q_v[6] ^ Q_v[7]);
     end
     else begin
-      OverFlow_v <= Carry_v ^ Carry7_v;
+      Overflow_v <= Carry_v ^ Carry7_v;
     end
   end
 
-  always @(Arith16, ALU_OP, F_In, BusA, BusB, IR, Q_v, Carry_v, HalfCarry_v, OverFlow_v, BitMask, ISet, Z16) begin : P1
+  always @(Arith16, ALU_Op, F_In, BusA, BusB, IR, Q_v, Carry_v, HalfCarry_v, Overflow_v, BitMask, ISet, Z16) begin : P1
     reg [7:0] Q_t;
     reg [8:0] DAA_Q;
 
@@ -165,13 +165,13 @@ reg [7:0] BitMask;
     4'b0000,4'b0001,4'b0010,4'b0011,4'b0100,4'b0101,4'b0110,4'b0111 : begin
       F_Out[Flag_N] <= 1'b0;
       F_Out[Flag_C] <= 1'b0;
-      case(ALU_OP[2:0])
+      case(ALU_Op[2:0])
       3'b000,3'b001 : begin
         // ADD, ADC
         Q_t = Q_v;
         F_Out[Flag_C] <= Carry_v;
         F_Out[Flag_H] <= HalfCarry_v;
-        F_Out[Flag_P] <= OverFlow_v;
+        F_Out[Flag_P] <= Overflow_v;
       end
       3'b010,3'b011,3'b111 : begin
         // SUB, SBC, CP
@@ -179,7 +179,7 @@ reg [7:0] BitMask;
         F_Out[Flag_N] <= 1'b1;
         F_Out[Flag_C] <=  ~Carry_v;
         F_Out[Flag_H] <=  ~HalfCarry_v;
-        F_Out[Flag_P] <= OverFlow_v;
+        F_Out[Flag_P] <= Overflow_v;
       end
       3'b100 : begin
         // AND

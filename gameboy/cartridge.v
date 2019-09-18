@@ -84,7 +84,7 @@ end
 
 icosoc_flashmem flash (
 	.clk(clk),
-  .resetn(resetn),
+  .resetn(!reset),
   .valid(flashmem_valid),
   .ready(flashmem_ready),
   .addr(flashmem_addr),

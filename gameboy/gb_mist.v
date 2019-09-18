@@ -59,7 +59,7 @@ assign LED1 = 1'b1; //load_done;
 wire reset = (reset_cnt != 0);
 reg [9:0] reset_cnt;
 wire pll_locked;
-always @(posedge clock_12) begin
+always @(posedge clk16) begin
 	if(!pll_locked)
 		reset_cnt <= 10'd1023;
 	else
@@ -72,8 +72,8 @@ wire gb_reset = (!cart_ready) || reset;
 
 wire card_rd, cart_wr;
 wire [7:0] cart_di;
-wire cart_addr;
-wire cart_do;
+wire [15:0] cart_addr;
+wire [7:0] cart_do;
 wire cart_rd;
 
 gb_cartridge cart_i (

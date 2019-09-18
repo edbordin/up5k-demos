@@ -27,7 +27,7 @@ SB_PLL40_PAD #(
                 .RESETB(1'b1),
                 .BYPASS(1'b0),
                 .PACKAGEPIN(clock_in),
-                .PLLOUTCORE(clock_out)
+                .PLLOUTGLOBAL(clock_out)
                 );
 
 endmodule

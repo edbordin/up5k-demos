@@ -7,7 +7,7 @@
     output Carry);
 
     wire B_i = Sub ? ~B : B;
-    wire Res_i = {1'b0, A, Carry_In} + {1'b0, B_i, 1'b1};
+    wire [5:0] Res_i = {1'b0, A, Carry_In} + {1'b0, B_i, 1'b1};
 		// Res_i := unsigned("0" & A & Carry_In) + unsigned("0" & B_i & "1");
     assign Carry = Res_i[5];
     assign Res = Res_i[4:0];
