@@ -27,17 +27,19 @@ module NES_ice40 (
   input joy_data,
   
   // flashmem
-  output flash_sck,
-  output flash_csn,
-  output flash_mosi,
-  input flash_miso,
+  flash_sck,
+  flash_csn,
+  inout flash_mosi, // output only until in QSPI mode
+  inout flash_miso,  // input only until in QSPI mode
+  inout flash_wp_n, // output only until in QSPI mode
+  inout flash_hold_n, // output only until in QSPI mode
   
   input buttons
 
   //output [7:0] leds
   
 );
-	wire clock;
+reg clock;
 
 wire sel_btn;
 
@@ -76,11 +78,20 @@ SB_IO #(
   
   wire [31:0] mapper_flags;
   
+wire clock_flash;
+
   pll pll_i (
   	.clock_in(clock_12),
-  	.clock_out(clock),
+  	.clock_out(clock_flash),
   	.locked(locked_pre)
-  );  
+  );
+
+  reg [1:0] ctr;
+  always @ (posedge clock_flash) begin
+      ctr <=  (ctr < 3) ? ctr + 1 : 0;
+      clock <= ctr < 2;
+  end
+   
 
   assign VGA_CK = clock;  
   assign LED0 = !memory_addr[0];
@@ -127,7 +138,9 @@ SB_IO #(
   end
 
   main_mem mem (
+    .flash_clock(flash_clock),
     .clock(clock),
+    .run_nes(run_nes_g),
     .reset(sys_reset),
     .reload(reload),
     .index({1'b0, last_pressed}),

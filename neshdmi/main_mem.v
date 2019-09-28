@@ -4,7 +4,7 @@ and cartridge data.
 */
 
 module main_mem(
-  input clock, reset,
+  input flash_clock, clock, run_nes, reset,
   
   input reload,
   input [3:0] index,
@@ -18,11 +18,14 @@ module main_mem(
   output reg [7:0] mem_q_cpu, mem_q_ppu,
   input [7:0] mem_d,
   
-  //Flash load interface
+    //Flash load interface
   output flash_csn,
   output flash_sck,
-  output flash_mosi,
-  input flash_miso);
+  inout flash_mosi, // output only until in QSPI mode (IO0)
+  inout flash_miso, // input only until in QSPI mode (IO1)
+  inout flash_wp_n, // output only until in QSPI mode (IO2)
+  inout flash_hold_n // output only until in QSPI mode (IO3)
+  );
   
 // Compress the 4MB logical address space to our limited available space
 // In the future a more sophisticated memory system will keep games in
@@ -65,7 +68,9 @@ begin
 end
 
 cart_mem cart_i (
+  .flash_clock(flash_clock),
   .clock(clock),
+  .run_nes(run_nes),
   .reset(reset),
   .reload(reload),
   .index(index),
@@ -84,7 +89,9 @@ cart_mem cart_i (
   .flash_csn(flash_csn),
   .flash_sck(flash_sck),
   .flash_mosi(flash_mosi),
-  .flash_miso(flash_miso)
+  .flash_miso(flash_miso),
+  .flash_hold_n(flash_hold_n),
+  .flash_wp_n(flash_wp_n)
 );
 
 generic_ram #(

@@ -6,7 +6,9 @@ SQI flash, which is more than fast enough
 */
 
 module cart_mem(
+  input flash_clock,
   input clock,
+  input run_nes,
   input reset,
   
   input reload,
@@ -30,8 +32,10 @@ module cart_mem(
   //Flash load interface
   output flash_csn,
   output flash_sck,
-  output flash_mosi,
-  input flash_miso,
+  inout flash_mosi, // output only until in QSPI mode (IO0)
+  inout flash_miso, // input only until in QSPI mode (IO1)
+  inout flash_wp_n, // output only until in QSPI mode (IO2)
+  inout flash_hold_n // output only until in QSPI mode (IO3)
 );
 
 reg load_done;
@@ -60,10 +64,11 @@ wire [31:0] spram_write_data = load_done ? {write_data, write_data, write_data, 
 
 wire [31:0] spram_read_data;
 
+wire [7:0] rom_read_data;
 wire [7:0] csram_read_data;
 // Demux the 32-bit memory
-assign read_data = sram_en ? csram_read_data : 
-    (decoded_address[1] ? (decoded_address[0] ? spram_read_data[31:24] : spram_read_data[23:16]) : (decoded_address[0] ? spram_read_data[15:8] : spram_read_data[7:0]));
+assign read_data = sram_en ? csram_read_data : rom_read_data;
+    //(decoded_address[1] ? (decoded_address[0] ? spram_read_data[31:24] : spram_read_data[23:16]) : (decoded_address[0] ? spram_read_data[15:8] : spram_read_data[7:0]));
 
  // The SRAM, used either for PROG_SRAM or CHR_SRAM
 generic_ram #(
@@ -77,39 +82,80 @@ generic_ram #(
   .write_data(write_data), 
   .read_data(csram_read_data)
 );
-// The SPRAM (with a generic option), which stores
-// the ROM
-`ifdef no_spram_prim
-  reg [31:0] spram_mem[0:32767];
-  reg [31:0] spram_dout_pre;
-  always @(posedge clock)
-  begin
-    spram_dout_pre <= spram_mem[spram_address];
-    if(spram_maskwren[0]) spram_mem[spram_address] <= spram_write_data[7:0];
-    if(spram_maskwren[1]) spram_mem[spram_address] <= spram_write_data[15:8];
-    if(spram_maskwren[2]) spram_mem[spram_address] <= spram_write_data[23:16];
-    if(spram_maskwren[3]) spram_mem[spram_address] <= spram_write_data[31:24];
-  end;
-  assign spram_read_data <= spram_dout_pre;
-`else
 
-  reg [14:0] address_reg;
-  reg [3:0] wen_reg;
-  reg [31:0] data_reg;
-  always @(posedge clock)
-  begin
-    address_reg <= spram_address;
-    wen_reg <= spram_maskwren;
-    data_reg <= spram_write_data;
-  end
-  up_spram spram_i (
-    .clk(clock),
-    .wen(wen_reg),
-    .addr({7'd0, address_reg}),
-    .wdata(data_reg),
-    .rdata(spram_read_data)
-  );
-`endif
+qspi_flashmem flashrom (
+  .clk(flash_clock),
+  .run_nes(run_nes),
+  .reset(reset),
+  .ready(flashmem_ready),
+  .read_en(!sram_en), //?
+  .addr(decoded_address),
+  .rdata(rom_read_data),
+  .spi_sclk(flash_sck),
+  .spi_cs_n(flash_csn),
+  .spi_mosi(flash_mosi),
+  .spi_miso(flash_miso),
+  .flash_wp_n(flash_wp_n),
+  .flash_hold_n(flash_hold_n)
+);
+// output flash_csn,
+  // output flash_sck,
+  // output flash_mosi,
+  // input flash_miso,
+// input clk, reset,
+
+//            // input valid,
+//            output reg ready = 0,
+//            input read_en,
+//            input [23:0] addr,
+//            output reg [7:0] rdata,
+
+//            // flashmem
+//            output spi_sclk,
+//            output reg spi_cs_n,
+//            inout spi_mosi, // output only until in QSPI mode (IO0)
+//            inout spi_miso,  // input only until in QSPI mode (IO1)
+//            inout flash_wp_n, // output only until in QSPI mode (IO2)
+//            inout flash_hold_n // output only until in QSPI mode (IO3)
+
+// DELETE below for flash 
+// // The SPRAM (with a generic option), which stores
+// // the ROM
+// `ifdef no_spram_prim
+//   reg [31:0] spram_mem[0:32767];
+//   reg [31:0] spram_dout_pre;
+//   always @(posedge clock)
+//   begin
+//     spram_dout_pre <= spram_mem[spram_address];
+//     if(spram_maskwren[0]) spram_mem[spram_address] <= spram_write_data[7:0];
+//     if(spram_maskwren[1]) spram_mem[spram_address] <= spram_write_data[15:8];
+//     if(spram_maskwren[2]) spram_mem[spram_address] <= spram_write_data[23:16];
+//     if(spram_maskwren[3]) spram_mem[spram_address] <= spram_write_data[31:24];
+//   end;
+//   assign spram_read_data <= spram_dout_pre;
+// `else
+
+//   reg [14:0] address_reg;
+//   reg [3:0] wen_reg;
+//   reg [31:0] data_reg;
+//   always @(posedge clock)
+//   begin
+//     address_reg <= spram_address;
+//     wen_reg <= spram_maskwren;
+//     data_reg <= spram_write_data;
+//   end
+//   up_spram spram_i (
+//     .clk(clock),
+//     .wen(wen_reg),
+//     .addr({7'd0, address_reg}),
+//     .wdata(data_reg),
+//     .rdata(spram_read_data)
+//   );
+// `endif
+
+always @(posedge flash_clock) begin
+
+end
 
 
 wire flashmem_valid = !load_done;
@@ -158,21 +204,5 @@ begin
     end
   end
 end
-
-
-
-icosoc_flashmem flash_i (
-	.clk(clock),
-  .reset(reset),
-  .valid(flashmem_valid),
-  .ready(flashmem_ready),
-  .addr(flashmem_addr),
-  .rdata(load_write_data),
-
-	.spi_cs(flash_csn),
-	.spi_sclk(flash_sck),
-	.spi_mosi(flash_mosi),
-	.spi_miso(flash_miso)
-);
 
 endmodule

@@ -1,5 +1,6 @@
 
-all: $(PROJ).rpt $(PROJ).bin
+# all: $(PROJ).rpt $(PROJ).bin
+all: $(PROJ).bin
 
 %.blif: $(ADD_SRC) $(ADD_DEPS)
 	yosys -ql $*.log $(if $(USE_ARACHNEPNR),-DUSE_ARACHNEPNR) -p 'synth_ice40 -top ${TOP} -blif $@' $(ADD_SRC)
@@ -9,7 +10,7 @@ all: $(PROJ).rpt $(PROJ).bin
 
 ifeq ($(USE_ARACHNEPNR),)
 %.asc: $(PIN_DEF) %.json
-	nextpnr-ice40 --$(DEVICE) $(if $(PACKAGE),--package $(PACKAGE)) $(if $(FREQ),--freq $(FREQ)) --json $(filter-out $<,$^) --placer heap --pcf $< --asc $@
+	nextpnr-ice40 --$(DEVICE) $(if $(PACKAGE),--package $(PACKAGE)) $(if $(FREQ),--freq $(FREQ)) --json $(filter-out $<,$^) --force --placer heap --pcf $< --asc $@
 else
 %.asc: $(PIN_DEF) %.blif
 	arachne-pnr -d $(subst up,,$(subst hx,,$(subst lp,,$(DEVICE)))) $(if $(PACKAGE),-P $(PACKAGE)) -o $@ -p $^
@@ -22,8 +23,8 @@ endif
 %.rpt: %.asc
 	icetime $(if $(FREQ),-c $(FREQ)) -d $(DEVICE) -mtr $@ $<
 
-%_tb: %_tb.v %.v
-	iverilog -o $@ $^
+%_tb: %_tb.v ../%.v
+	iverilog -o $@ $^ `yosys-config --datdir/ice40/cells_sim.v`
 
 %_tb.vcd: %_tb
 	vvp -N $< +vcd=$@
