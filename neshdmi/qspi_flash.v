@@ -20,27 +20,34 @@ reg spi_cs=1'b0;
 assign spi_cs_n = !spi_cs;
 
 // reg initialized;
-reg [2:0] state = STATE_SPI_CMD0;
-reg [6:0] counter; // used for different purposes by each state
+reg [3:0] state = STATE_SPI_CMD0;
+reg [12:0] counter; // used for different purposes by each state
 
 
-localparam STATE_SPI_CMD0 = 3'd0; // sending the initial SPI command
+localparam STATE_SPI_CMD0 = 4'd0; // sending the initial SPI command (enable QE bit)
+localparam STATE_END_CMD0 = 4'd1; // ending initial SPI command
+localparam STATE_SPI_CMD1 = 4'd2; // sending the second SPI command
+localparam STATE_ADDRESS = 4'd3; // sending read address mode
+localparam STATE_READ = 4'd4; // let the flash output one byte of read data from dummy address
+localparam STATE_WAIT = 4'd5; // flash is initialised and waiting for a read command
+localparam STATE_RESET = 4'd6; // send the reset sequence to the flash
+localparam STATE_WAIT_RESET = 4'd7; // wait approx 30 us for flash to reset
+
 // spi cmds and data are sent msb first
-localparam [0:15] SPI_CMD0 = 16'hAAAA;
-// localparam [0:16] SPI_CMD0 = 16'h31_00 | 16'b00000010; //Write Status Register-2 (31h) set QE bit
+//localparam [0:15] SPI_CMD0 = 16'hAAAA; // for sim
+localparam [0:15] SPI_CMD0 = 16'h31_00 | 16'b00000010; //Write Status Register-2 (31h) set QE bit
 
+// localparam [0:7] SPI_CMD1 = 8'h55; // for sim
+localparam [0:7] SPI_CMD1 = 8'hED; //DTR Fast Read Quad I/O
+localparam [0:7] M70_ENABLE_FASTREAD = 8'b00100000; // M5-4=1,0 (sent as part of CMD1 to enable continuous read)
 
-localparam STATE_END_CMD0 = 3'd1; // sending the second SPI command
-localparam STATE_SPI_CMD1 = 3'd2; // sending the second SPI command
-localparam [0:7] SPI_CMD1 = 8'h55; //DTR Fast Read Quad I/O
-// localparam [0:8] SPI_CMD1 = 8'hED; //DTR Fast Read Quad I/O
+// bitbang the reset sequence rather than messing around with a bunch of states
+// FFh to ensure we are out of continuous read mode, 66h enable reset, 99h reset
+localparam [0:27] SPI_CMD_RESET = {1'b0, 8'hFF, 1'b0, 8'h66, 1'b0, 8'h99, 1'b0}; 
+localparam [0:27] SPI_CS_RESET = {1'b0, 8'hFF, 1'b0, 8'hFF, 1'b0, 8'hFF, 1'b0};
 
-localparam STATE_ADDRESS = 3'd3; // sending a read address in DTR mode
-localparam [0:7] M70_ENABLE_FASTREAD = 8'b00100000; // M5-4=1,0
-localparam STATE_READ = 3'd4; // let the flash output one byte of read data from dummy address
-localparam STATE_WAIT = 3'd5; // flash is initialised and waiting for a read command
-
-// wire quad_output = (state == STATE_ADDRESS) | (state == STATE_SPI_CMD);
+// localparam [12:0] RESET_WAIT_CYCLES = 12'd10; // for sim
+localparam [12:0] RESET_WAIT_CYCLES = 12'd2600; // wait 30 us ~= 2566 cycles @ 85.5 MHz
 
 reg [0:7] flash_in; //host out, flash in
 wire [0:7] flash_out; // host in, flash out (SB_IO has registers internally)
@@ -77,6 +84,7 @@ SB_IO #(
           .D_IN_0(flash_out[6]),
           .D_IN_1(flash_out[2])
       );
+
 // WP_N | IO2
 SB_IO #(
           .PIN_TYPE(pin_type),
@@ -91,6 +99,7 @@ SB_IO #(
           .D_IN_0(flash_out[5]),
           .D_IN_1(flash_out[1])
       );
+
 // HOLD_N | IO3
 SB_IO #(
           .PIN_TYPE(pin_type),
@@ -106,24 +115,6 @@ SB_IO #(
           .D_IN_1(flash_out[0])
       );
 
-
-// 0. /CS low to enable, IO0-IO3 set to output mode, single data rate
-//The Quad Enable bit (QE) of Status Register-2 must be set to enable the Fast Read Quad I/O Instruction.
-// 1. bit bang SPI command EDh (DTR Fast Read Quad I/O)
-// 1a. Transition to next stage:
-//  IO0-IO3 set to output mode, double data rate
-//  load first address byte in ddr registers
-// 2a. load second address byte
-// 2b. load third address byte
-// 2c. load M7-0
-// 2d. 7 dummy clocks
-// 2e. Transition to next stage:
-// IO0-4 set to input mode, double data rate
-// 3a. read one byte ddr
-// 3b. transition to post-init operation:
-// /CS high to finish command
-// flash_ready <= 1
-
 reg [2:0] next_state;
 reg clear_counter;
 
@@ -133,8 +124,9 @@ always @* begin
     if (reset) begin
         io_oe = 4'b0000;
         spi_cs = 1'b0;
-        next_state = STATE_SPI_CMD0;
-        // flash_in = 8'bxxxxxxxx;
+        next_state = STATE_RESET;
+        clear_counter = 1'b1;
+        flash_in = 8'b0;
     end else if (state == STATE_SPI_CMD0) begin
         if(counter < $bits(SPI_CMD0)) begin
             io_oe = 4'b0001;
@@ -191,9 +183,8 @@ always @* begin
         rdata = flash_out;
         next_state = STATE_WAIT;
         spi_cs = 1'b1;
-        ready = 1;
     end else if (state == STATE_WAIT) begin
-        if (read_en) begin
+        if (read_en && !reset) begin
             next_state = STATE_ADDRESS;
             spi_cs = 1'b1;
             io_oe = 4'b1111;
@@ -206,25 +197,38 @@ always @* begin
             io_oe = 4'b0000;
             clear_counter = 1;
         end
+    end else if (state == STATE_RESET) begin
+        if (counter < $bits(SPI_CMD_RESET)) begin
+            io_oe = 4'b0001;
+            // bit bang the cs line instead of writing more state machine logic
+            spi_cs = SPI_CS_RESET[counter[4:0]];
+            flash_in = {3'b000, SPI_CMD_RESET[counter[4:0]], 3'b000, SPI_CMD_RESET[counter[4:0]]};
+            next_state = STATE_RESET;
+        end else begin
+            next_state = STATE_WAIT_RESET;
+            clear_counter = 1;
+            io_oe = 4'b0000;
+            spi_cs = 1'b0;
+        end
+    end else if (state == STATE_WAIT_RESET) begin
+        io_oe = 4'b0000;
+        spi_cs = 1'b0;
+        if (counter == RESET_WAIT_CYCLES) begin
+            // now init the chip again
+            next_state = STATE_SPI_CMD0;
+            clear_counter = 1;
+        end
     end
 end
 
-always @(posedge clk, posedge reset) begin
-    if (reset) begin
-        // ready <= 0;
-        // rdata <= 8'b0;
+always @(posedge clk) begin
+    if (state != STATE_WAIT || run_nes == 1'b1) begin
+        state <= next_state;
+    end
+    if (clear_counter) begin
         counter <= 0;
-        state <= STATE_SPI_CMD0;
-        // flash_in <= 8'b0;
     end else begin
-        if (state != STATE_WAIT || run_nes == 1'b1) begin
-            state <= next_state;
-        end
-        if (clear_counter) begin
-            counter <= 0;
-        end else begin
-            counter <= counter + 1;
-        end
+        counter <= counter + 1;
     end
 end
 
