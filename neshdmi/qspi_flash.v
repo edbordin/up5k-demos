@@ -42,10 +42,10 @@ localparam STATE_WAIT = 3'd5; // flash is initialised and waiting for a read com
 
 // wire quad_output = (state == STATE_ADDRESS) | (state == STATE_SPI_CMD);
 
-reg [7:0] flash_in; //host out, flash in
-wire [7:0] flash_out; // host in, flash out (SB_IO has registers internally)
+reg [0:7] flash_in; //host out, flash in
+wire [0:7] flash_out; // host in, flash out (SB_IO has registers internally)
 
-localparam pin_type = 6'b1100_00; //PIN_OUTPUT_DDR_ENABLE_REGISTERED, PIN_INPUT_DDR
+localparam pin_type = 6'b1000_00; // PIN_OUTPUT_DDR_ENABLE | PIN_INPUT_DDR
 reg [3:0] io_oe;
 
 // MOSI | IO0
@@ -54,11 +54,13 @@ SB_IO #(
           .PULLUP(1'b0)
       ) IO0 (
           .PACKAGE_PIN(spi_mosi),
+          .INPUT_CLK(clk),
+          .OUTPUT_CLK(clk),
           .OUTPUT_ENABLE(io_oe[0]),
-          .D_OUT_0(flash_in[0]),
-          .D_OUT_1(flash_in[4]),
-          .D_IN_0(flash_out[0]),
-          .D_IN_1(flash_out[4])
+          .D_OUT_0(flash_in[7]),
+          .D_OUT_1(flash_in[3]),
+          .D_IN_0(flash_out[7]),
+          .D_IN_1(flash_out[3])          
       );
 
 // MISO | IO1
@@ -67,11 +69,13 @@ SB_IO #(
           .PULLUP(1'b 0)
       ) IO1 (
           .PACKAGE_PIN(spi_miso),
+          .INPUT_CLK(clk),
+          .OUTPUT_CLK(clk),
           .OUTPUT_ENABLE(io_oe[1]),
-          .D_OUT_0(flash_in[1]),
-          .D_OUT_1(flash_in[5]),
-          .D_IN_0(flash_out[1]),
-          .D_IN_1(flash_out[5])
+          .D_OUT_0(flash_in[6]),
+          .D_OUT_1(flash_in[2]),
+          .D_IN_0(flash_out[6]),
+          .D_IN_1(flash_out[2])
       );
 // WP_N | IO2
 SB_IO #(
@@ -79,11 +83,13 @@ SB_IO #(
           .PULLUP(1'b 0)
       ) IO2 (
           .PACKAGE_PIN(flash_wp_n),
+          .INPUT_CLK(clk),
+          .OUTPUT_CLK(clk),
           .OUTPUT_ENABLE(io_oe[2]),
-          .D_OUT_0(flash_in[2]),
-          .D_OUT_1(flash_in[6]),
-          .D_IN_0(flash_out[2]),
-          .D_IN_1(flash_out[6])
+          .D_OUT_0(flash_in[5]),
+          .D_OUT_1(flash_in[1]),
+          .D_IN_0(flash_out[5]),
+          .D_IN_1(flash_out[1])
       );
 // HOLD_N | IO3
 SB_IO #(
@@ -91,11 +97,13 @@ SB_IO #(
           .PULLUP(1'b 0)
       ) IO3 (
           .PACKAGE_PIN(flash_hold_n),
-          .OUTPUT_ENABLE(io_oe[3]),
-          .D_OUT_0(flash_in[3]),
-          .D_OUT_1(flash_in[7]),
-          .D_IN_0(flash_out[3]),
-          .D_IN_1(flash_out[7])
+          .INPUT_CLK(clk),
+          .OUTPUT_CLK(clk),
+          .OUTPUT_ENABLE(io_oe[3]),          
+          .D_OUT_0(flash_in[4]),
+          .D_OUT_1(flash_in[0]),
+          .D_IN_0(flash_out[4]),
+          .D_IN_1(flash_out[0])
       );
 
 
@@ -129,10 +137,10 @@ always @* begin
         // flash_in = 8'bxxxxxxxx;
     end else if (state == STATE_SPI_CMD0) begin
         if(counter < $bits(SPI_CMD0)) begin
-            io_oe = 4'b1000;
+            io_oe = 4'b0001;
             spi_cs = 1'b1;
             next_state = STATE_SPI_CMD0;
-            flash_in = {SPI_CMD0[counter[2:0]], 3'b000, SPI_CMD0[counter[2:0]], 3'b000};
+            flash_in = {3'b000, SPI_CMD0[counter[2:0]], 3'b000, SPI_CMD0[counter[2:0]]};
         end else begin
             io_oe = 4'b0000;
             spi_cs = 1'b0;
@@ -140,10 +148,10 @@ always @* begin
             clear_counter = 1;
         end
     end else if (state == STATE_END_CMD0 || (state == STATE_SPI_CMD1 && counter < $bits(SPI_CMD1))) begin
-        io_oe = 4'b1000;
+        io_oe = 4'b0001;
         spi_cs = 1'b1;
         next_state = STATE_SPI_CMD1;
-        flash_in = {SPI_CMD1[counter[2:0]], 3'b000, SPI_CMD1[counter[2:0]], 3'b000};
+        flash_in = {3'b000, SPI_CMD1[counter[2:0]], 3'b000, SPI_CMD1[counter[2:0]]};
     end else if (state == STATE_SPI_CMD1 && counter == $bits(SPI_CMD1)) begin
         io_oe = 4'b1111;
         spi_cs = 1'b1;
@@ -166,13 +174,13 @@ always @* begin
             end
             6'd3, 6'd4, 6'd5, 6'd6, 6'd7, 6'd8: begin
                 io_oe = 4'b0000;
-                flash_in = 8'bxxxxxxxx;
+                flash_in = 8'b0;
                 // 6/7 dummy clocks
             end
             6'd9: begin
                 // 7/7 dummy clocks
                 io_oe = 4'b0000;
-                flash_in = 8'bxxxxxxxx;
+                flash_in = 8'b0;
                 next_state = STATE_READ;
                 clear_counter = 1;
             end
