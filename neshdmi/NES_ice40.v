@@ -27,8 +27,8 @@ module NES_ice40 (
   input joy_data,
   
   // flashmem
-  flash_sck,
-  flash_csn,
+  output flash_sck,
+  output flash_csn,
   inout flash_mosi, // output only until in QSPI mode
   inout flash_miso,  // input only until in QSPI mode
   inout flash_wp_n, // output only until in QSPI mode
@@ -138,7 +138,7 @@ wire clock_flash;
   end
 
   main_mem mem (
-    .flash_clock(flash_clock),
+    .flash_clock(clock_flash),
     .clock(clock),
     .run_nes(run_nes_g),
     .reset(sys_reset),

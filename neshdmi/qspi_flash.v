@@ -118,9 +118,19 @@ SB_IO #(
 reg [2:0] next_state;
 reg clear_counter;
 
+reg rdata_load;
+reg [7:0] rdata_next;
+
 always @* begin
-    clear_counter = 0;
-    ready = 0;
+    // defaults to avoid inferring a latch
+    clear_counter = 1'b0;
+    ready = 1'b0;
+    io_oe = 4'b0000;
+    spi_cs = 1'b0;
+    next_state = STATE_RESET;
+    flash_in = 8'b0;
+    rdata_load = 1'b0;
+    rdata_next = 8'b0;
     if (reset) begin
         io_oe = 4'b0000;
         spi_cs = 1'b0;
@@ -180,7 +190,8 @@ always @* begin
     end else if (state == STATE_READ) begin
         io_oe = 4'b0000;
         clear_counter = 1;
-        rdata = flash_out;
+        rdata_load = 1'b1;
+        rdata_next = flash_out;
         next_state = STATE_WAIT;
         spi_cs = 1'b1;
     end else if (state == STATE_WAIT) begin
@@ -222,6 +233,9 @@ always @* begin
 end
 
 always @(posedge clk) begin
+    if (rdata_load) begin
+        rdata <= rdata_next;
+    end
     if (state != STATE_WAIT || run_nes == 1'b1) begin
         state <= next_state;
     end
