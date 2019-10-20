@@ -21,8 +21,8 @@ wire spi_sclk, spi_cs_n;
 // that it reads them correctly (normally the QSPI flash responds with data)
 wire spi_mosi = (flash.io_oe == 4'b0000) ? 1'b1 :1'bz;
 wire spi_miso = (flash.io_oe == 4'b0000) ? 1'b0 :1'bz;
-wire flash_wp_n = (flash.io_oe == 4'b0000) ? 1'b0 :1'bz;
-wire flash_hold_n = (flash.io_oe == 4'b0000) ? 1'b0 :1'bz;
+wire flash_wp_n = (flash.io_oe == 4'b0000) ? 1'b1 :1'bz;
+wire flash_hold_n = (flash.io_oe == 4'b0000) ? 1'b1 :1'bz;
 
 qspi_flashmem flash(
                   .clk(clk2),

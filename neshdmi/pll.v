@@ -47,10 +47,11 @@
 module pll(
         input  clock_in,
         output clock_out,
+        output clock_passthrough,
         output locked
         );
 
-SB_PLL40_PAD #(
+SB_PLL40_2_PAD  #(
                 .FEEDBACK_PATH("SIMPLE"),
                 .DIVR(4'b0000),         // DIVR =  0
                 .DIVF(7'b0111000),      // DIVF = 56
@@ -61,7 +62,8 @@ SB_PLL40_PAD #(
                 .RESETB(1'b1),
                 .BYPASS(1'b0),
                 .PACKAGEPIN(clock_in),
-                .PLLOUTCORE(clock_out)
+                .PLLOUTGLOBALA(clock_passthrough),
+                .PLLOUTGLOBALB(clock_out)
                 );
 
 endmodule

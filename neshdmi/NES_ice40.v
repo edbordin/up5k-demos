@@ -7,7 +7,7 @@
 module NES_ice40 (  
 	// clock input
   input clock_12,
-  output LED0, LED1,
+  output LEDR_N, LEDG_N,
   
   // VGA over HDMI
   output         VGA_CK,
@@ -20,11 +20,10 @@ module NES_ice40 (
                                                                                                     
 
   // audio
-  output           AUDIO_O,
+  // output           AUDIO_O,
   
   // joystick
-  output joy_strobe, joy_clock,
-  input joy_data,
+  // output joy_strobe, joy_clock,
   
   // flashmem
   output flash_sck,
@@ -34,11 +33,14 @@ module NES_ice40 (
   inout flash_wp_n, // output only until in QSPI mode
   inout flash_hold_n, // output only until in QSPI mode
   
-  input buttons
+  input buttons,
 
-  //output [7:0] leds
+  output [4:0] LED
   
 );
+wire joy_strobe, joy_clock;
+wire joy_data = 1'b0;
+
 reg clock;
 
 wire sel_btn;
@@ -94,8 +96,8 @@ wire clock_flash;
    
 
   assign VGA_CK = clock;  
-  assign LED0 = !memory_addr[0];
-  assign LED1 = load_done;
+  assign LEDG_N = !memory_addr[0]; // green
+  assign LEDR_N = !load_done; // red
   //assign leds = memory_din_cpu;
   
   wire sys_reset = !clock_locked;
@@ -159,7 +161,10 @@ wire clock_flash;
     .flash_csn(flash_csn),
     .flash_sck(flash_sck),
     .flash_mosi(flash_mosi),
-    .flash_miso(flash_miso)
+    .flash_miso(flash_miso),
+    .flash_wp_n(flash_wp_n),
+    .flash_hold_n(flash_hold_n),
+    .debug(LED)
   );
   
   wire reset_nes = !load_done || sys_reset;
@@ -241,7 +246,7 @@ video video (
 );
 
 wire audio;
-assign AUDIO_O = audio;
+// assign AUDIO_O = audio;
 
 sigma_delta_dac sigma_delta_dac (
 	.DACout(audio),

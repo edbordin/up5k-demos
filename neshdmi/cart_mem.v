@@ -36,7 +36,9 @@ module cart_mem(
   inout flash_mosi, // output only until in QSPI mode (IO0)
   inout flash_miso, // input only until in QSPI mode (IO1)
   inout flash_wp_n, // output only until in QSPI mode (IO2)
-  inout flash_hold_n // output only until in QSPI mode (IO3)
+  inout flash_hold_n, // output only until in QSPI mode (IO3)
+
+  output [4:0] debug
 );
 
 wire load_done;
@@ -88,7 +90,8 @@ qspi_flashmem flashrom (
   .spi_mosi(flash_mosi),
   .spi_miso(flash_miso),
   .flash_wp_n(flash_wp_n),
-  .flash_hold_n(flash_hold_n)
+  .flash_hold_n(flash_hold_n),
+  .debug(debug)
 );
 
 endmodule

@@ -1,6 +1,7 @@
 set_io clock_12 35
-set_io LED0 37
-set_io LED1 11
+
+set_io -nowarn LEDR_N     11
+set_io -nowarn LEDG_N     37
 
 set_io VGA_CK 38
 set_io VGA_DE 32
@@ -19,10 +20,10 @@ set_io VGA_R[2] 3
 set_io VGA_R[1] 2
 set_io VGA_R[0] 48
 
-set_io -nowarn AUDIO_O 19
-set_io joy_strobe 25
-set_io joy_clock 27
-set_io joy_data 21
+#set_io -nowarn AUDIO_O 19
+#set_io joy_strobe 25
+#set_io joy_clock 27
+#set_io joy_data 21
 
 set_io flash_wp_n 12
 set_io flash_hold_n 13
@@ -31,20 +32,29 @@ set_io flash_csn 16
 set_io flash_mosi 14
 set_io flash_miso 17
 
+
+
+# PMOD 2
+set_io -nowarn P2_1       27
+set_io -nowarn P2_2       25
+set_io -nowarn P2_3       21
+set_io -nowarn P2_4       19
+set_io -nowarn P2_7       26
+set_io -nowarn P2_8       23
+set_io -nowarn P2_9       20
+set_io -nowarn P2_10      18
+
+# LEDs and Buttons (PMOD 2)
+set_io -nowarn LED[0]       26
+set_io -nowarn LED[1]       27
+set_io -nowarn LED[2]       25
+set_io -nowarn LED[3]       23
+set_io -nowarn LED[4]       21
+set_io -nowarn BTN1       20
+set_io -nowarn BTN2       19
+set_io -nowarn BTN3       18
+
 set_io buttons 10
 
-#set_io buttons[0] 10
-#set_io buttons[1] 20
-#set_io buttons[2] 19
-#set_io buttons[3] 18
-#set_io buttons[4] 32
-
-#set_io leds[0] 27
-#set_io leds[1] 25
-#set_io leds[2] 21
-#set_io leds[3] 19
-#set_io leds[4] 26
-#set_io leds[5] 23
-#set_io leds[6] 20
-#set_io leds[7] 18
-
+set_io UART_RX 6
+set_io UART_TX 9
